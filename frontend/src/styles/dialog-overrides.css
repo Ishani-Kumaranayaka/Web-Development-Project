@@ -1,0 +1,12 @@
+.modal-backdrop {
+  overflow-y: auto;
+  align-items: start;
+}
+
+.auth-modal {
+  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-block: auto;
+}

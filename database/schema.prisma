@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum CatalogKind {
+  DESTINATION
+  HOTEL
+  ACTIVITY
+  PACKAGE
+}
+
+model User {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  email        String     @unique
+  password     String
+  role         Role       @default(USER)
+  profileImage String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  trips        Trip[]
+  bookings     Booking[]
+  wishlist     Wishlist[]
+  reviews      Review[]
+}
+
+model Destination {
+  id           String               @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  description  String
+  location     String
+  province     String
+  category     String
+  image        String
+  bestTime     String
+  averageCost  Float
+  rating       Float                @default(0)
+  latitude     Float?
+  longitude    Float?
+  hotels       Hotel[]
+  activities   Activity[]
+  tripItems    TripDestination[]
+  packageItems PackageDestination[]
+  reviews      Review[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+}
+
+model Hotel {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  description   String
+  location      String
+  pricePerNight Float
+  rating        Float     @default(0)
+  image         String
+  facilities    String[]
+  destinationId String    @db.ObjectId
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  bookings      Booking[]
+  reviews       Review[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Activity {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  description   String
+  category      String
+  price         Float
+  duration      String
+  image         String
+  rating        Float       @default(0)
+  destinationId String      @db.ObjectId
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  reviews       Review[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model TourPackage {
+  id                 String                @id @default(auto()) @map("_id") @db.ObjectId
+  name               String
+  description        String
+  duration           String
+  price              Float
+  image              String
+  includedActivities String[]
+  hotelInformation   String
+  itinerary          Json
+  destinations       PackageDestination[]
+  bookings           Booking[]
+  reviews            Review[]
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+}
+
+model PackageDestination {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  packageId     String       @db.ObjectId
+  destinationId String       @db.ObjectId
+  order         Int          @default(0)
+  tourPackage   TourPackage  @relation(fields: [packageId], references: [id])
+  destination   Destination  @relation(fields: [destinationId], references: [id])
+
+  @@unique([packageId, destinationId])
+}
+
+model Trip {
+  id             String            @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String            @db.ObjectId
+  name           String
+  startDate      DateTime
+  endDate        DateTime
+  user           User              @relation(fields: [userId], references: [id])
+  destinations   TripDestination[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model TripDestination {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  tripId        String      @db.ObjectId
+  destinationId String      @db.ObjectId
+  order         Int         @default(0)
+  notes         String?
+  trip          Trip        @relation(fields: [tripId], references: [id])
+  destination   Destination @relation(fields: [destinationId], references: [id])
+
+  @@unique([tripId, destinationId])
+}
+
+model Booking {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String        @db.ObjectId
+  hotelId   String?       @db.ObjectId
+  packageId String?       @db.ObjectId
+  checkIn   DateTime
+  checkOut  DateTime
+  guests    Int
+  totalPrice Float
+  status    BookingStatus @default(PENDING)
+  specialRequests String?
+  user      User          @relation(fields: [userId], references: [id])
+  hotel     Hotel?        @relation(fields: [hotelId], references: [id])
+  tourPackage TourPackage? @relation(fields: [packageId], references: [id])
+  reviews   Review[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model Wishlist {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String     @db.ObjectId
+  kind      CatalogKind
+  itemId    String     @db.ObjectId
+  user      User       @relation(fields: [userId], references: [id])
+  createdAt DateTime   @default(now())
+
+  @@unique([userId, kind, itemId])
+}
+
+model Review {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String       @db.ObjectId
+  bookingId     String?      @db.ObjectId
+  hotelId       String?      @db.ObjectId
+  destinationId String?      @db.ObjectId
+  activityId    String?      @db.ObjectId
+  packageId     String?      @db.ObjectId
+  rating        Int
+  comment       String
+  user          User         @relation(fields: [userId], references: [id])
+  booking       Booking?     @relation(fields: [bookingId], references: [id])
+  hotel         Hotel?       @relation(fields: [hotelId], references: [id])
+  destination   Destination? @relation(fields: [destinationId], references: [id])
+  activity      Activity?    @relation(fields: [activityId], references: [id])
+  tourPackage   TourPackage? @relation(fields: [packageId], references: [id])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
