@@ -9,19 +9,60 @@ import {
   Star,
 } from "lucide-vue-next";
 import { useAppPageContext } from "../../../context/appPageContext";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
 const { store, destinations, go, openDetail, showToast, formattedDate } =
   useAppPageContext();
+
+  const currentTime = ref(new Date());
+
+const greeting = computed(() => {
+  const hour = currentTime.value.getHours();
+
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+
+  return "Good evening";
+});
+
+let greetingTimer: ReturnType<typeof setInterval> | undefined;
+
+onMounted(() => {
+  // Update while the dashboard stays open.
+  currentTime.value = new Date();
+
+  greetingTimer = setInterval(() => {
+    currentTime.value = new Date();
+  }, 30_000);
+});
+
+onUnmounted(() => {
+  if (greetingTimer !== undefined) {
+    clearInterval(greetingTimer);
+  }
+});
+const todayLabel = computed(() =>
+  currentTime.value
+    .toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })
+    .toUpperCase(),
+);
 </script>
 
 <template>
   <main class="content-page workspace-page dashboard-page">
     <div class="dashboard-welcome">
       <div>
-        <p class="eyebrow">MONDAY, SEPTEMBER 28, 2026 · YOUR TRAVELMATE</p>
-        <h1>
-          Good morning, {{ store.user?.name.split(" ")[0] ?? "traveller" }}.
-        </h1>
+       <p class="eyebrow">
+  {{ todayLabel }} · YOUR TRAVELMATE
+</p>
+       <h1>
+  {{ greeting }}, {{ store.user?.name.split(" ")[0] ?? "traveller" }}.
+</h1>
         <p>The island is still out there, waiting for you.</p>
       </div>
       <button class="button button-dark" @click="go('/planner')">
