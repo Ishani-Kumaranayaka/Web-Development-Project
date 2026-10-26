@@ -30,34 +30,33 @@ const { store, destinations, go, openDetail, showToast, formattedDate } =
     </div>
     <div class="stat-row">
       <button class="stat-block" @click="go('/planner')">
-        <span class="stat-symbol"><Compass :size="19" /></span
-        ><span class="stat-number">{{
-          store.trips.length.toString().padStart(2, "0")
-        }}</span
-        ><span class="stat-caption">Trips planned</span
-        ><ArrowUpRight :size="16" /></button
-      ><button class="stat-block" @click="go('/bookings')">
-        <span class="stat-symbol coral"><CalendarDays :size="19" /></span
-        ><span class="stat-number">{{
-          store.bookings.length.toString().padStart(2, "0")
-        }}</span
-        ><span class="stat-caption">Bookings</span
-        ><ArrowUpRight :size="16" /></button
-      ><button class="stat-block" @click="go('/wishlist')">
-        <span class="stat-symbol yellow"><Heart :size="19" /></span
-        ><span class="stat-number">{{
-          store.wishlist.length.toString().padStart(2, "0")
-        }}</span
-        ><span class="stat-caption">Saved places</span
-        ><ArrowUpRight :size="16" /></button
-      ><button
+        <span class="stat-symbol"><Compass :size="19" /></span>
+        <span class="stat-number">{{ store.trips.length.toString().padStart(2, "0") }}</span>
+        <span class="stat-caption">Trips planned</span>
+        <ArrowUpRight :size="16" />
+      </button>
+      <button class="stat-block" @click="go('/bookings')">
+        <span class="stat-symbol coral"><CalendarDays :size="19" /></span>
+        <span class="stat-number">{{ store.bookings.length.toString().padStart(2, "0") }}</span>
+        <span class="stat-caption">Bookings</span>
+        <ArrowUpRight :size="16" />
+      </button>
+      <button class="stat-block" @click="go('/wishlist')">
+        <span class="stat-symbol yellow"><Heart :size="19" /></span>
+        <span class="stat-number">{{ store.wishlist.length.toString().padStart(2, "0") }}</span>
+        <span class="stat-caption">Saved places</span>
+        <ArrowUpRight :size="16" />
+      </button>
+      <button
         class="stat-block"
-        @click="showToast('You have two traveller reviews')"
+        @click="showToast(`You have ${store.userReviews.length} traveller reviews`)"
       >
-        <span class="stat-symbol blue"><Star :size="19" /></span
-        ><span class="stat-number">02</span
-        ><span class="stat-caption">Your reviews</span
-        ><ArrowUpRight :size="16" />
+        <span class="stat-symbol blue"><Star :size="19" /></span>
+        <span class="stat-number">{{
+          store.userReviews.length.toString().padStart(2, "0")
+        }}</span>
+        <span class="stat-caption">Your reviews</span>
+        <ArrowUpRight :size="16" />
       </button>
     </div>
     <div class="dashboard-grid">

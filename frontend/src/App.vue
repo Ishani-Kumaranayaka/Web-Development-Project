@@ -117,7 +117,9 @@ const bookingTotal = computed(() => {
       : 0;
 });
 const detailReviews = computed(() =>
-  reviews.filter((review) => review.itemId === detailId.value),
+  [...reviews, ...store.userReviews].filter(
+    (review) => review.itemId === detailId.value,
+  ),
 );
 watch(bookingType, () => {
   bookingItem.value = bookingOptions.value[0]?.id ?? "";
@@ -175,56 +177,41 @@ function bookStay(): void {
   void router.push("/bookings");
 }
 async function signIn(): Promise<void> {
-  let databaseConfigured = false;
   try {
-    databaseConfigured = (await api.health()).databaseConfigured;
-  } catch {
-    databaseConfigured = false;
+    const email = loginEmail.value.trim().toLowerCase();
+
+    const response =
+      modal.value === "register"
+        ? await api.register({
+            name: loginName.value.trim(),
+            email,
+            password: loginPassword.value,
+          })
+        : await api.login({
+            email,
+            password: loginPassword.value,
+          });
+
+    api.setToken(response.data.token);
+    store.user = response.data.user;
+
+    // Close the popup only after success.
+    modal.value = "";
+    loginPassword.value = "";
+
+    showToast("Welcome to TravelMate");
+
+    await router.push(
+      response.data.user.role === "ADMIN"
+        ? "/admin/dashboard"
+        : "/dashboard",
+    );
+  } catch (error) {
+    // Show the error and keep the popup open.
+    showToast(api.getErrorMessage(error));
   }
-  if (databaseConfigured && !loginAsAdmin.value) {
-    try {
-      const response =
-        modal.value === "register"
-          ? await api.register({
-              name: loginName.value,
-              email: loginEmail.value,
-              password: loginPassword.value,
-            })
-          : await api.login({
-              email: loginEmail.value,
-              password: loginPassword.value,
-            });
-      api.setToken(response.data.token);
-      store.user = {
-        ...response.data.user,
-        createdAt: new Date(response.data.user.createdAt).toISOString(),
-      };
-      modal.value = "";
-      showToast("Welcome to TravelMate");
-      await router.push(
-        response.data.user.role === "ADMIN" ? "/admin/dashboard" : "/dashboard",
-      );
-      return;
-    } catch (error) {
-      showToast(api.getErrorMessage(error));
-      return;
-    }
-  }
-  store.login(
-    loginName.value || "Alex Morgan",
-    loginEmail.value || "alex@example.com",
-    loginAsAdmin.value ? "ADMIN" : "USER",
-  );
-  modal.value = "";
-  showToast(
-    loginAsAdmin.value
-      ? "Admin demo session started"
-      : "Welcome back to TravelMate",
-  );
-  await router.push(
-    store.user?.role === "ADMIN" ? "/admin/dashboard" : "/dashboard",
-  );
 }
+
 function price(value: number): string {
   return `$${value.toLocaleString()}`;
 }
@@ -320,6 +307,6 @@ provide(appPageContextKey, {
 
     <SiteFooter />
     <AuthDialog />
-    <ToastNotification /><FloatingTripPlanner />
+    <ToastNotification /><FloatingTripPlanner v-if="page === 'home'" />
   </div>
 </template>

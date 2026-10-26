@@ -19,6 +19,12 @@ enum BookingStatus {
   COMPLETED
 }
 
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+}
+
 enum CatalogKind {
   DESTINATION
   HOTEL
@@ -158,6 +164,7 @@ model Booking {
   guests    Int
   totalPrice Float
   status    BookingStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(UNPAID)
   specialRequests String?
   user      User          @relation(fields: [userId], references: [id])
   hotel     Hotel?        @relation(fields: [hotelId], references: [id])

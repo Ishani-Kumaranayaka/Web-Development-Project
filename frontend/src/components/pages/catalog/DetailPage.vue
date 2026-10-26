@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -29,6 +30,42 @@ const {
   bookingItem,
   showToast,
 } = useAppPageContext();
+const reviewRating = ref(5);
+const reviewComment = ref("");
+
+function submitReview() {
+  const comment = reviewComment.value.trim();
+  if (comment.length < 10) {
+    showToast("Reviews need at least 10 characters");
+    return;
+  }
+  if (!store.user) {
+    go("/login");
+    return;
+  }
+  store.addReview(
+    detailKind.value as CatalogKind,
+    detailId.value,
+    reviewRating.value,
+    comment,
+  );
+  reviewComment.value = "";
+  showToast("Your review has been added");
+}
+
+function addDetailToTrip() {
+  const trip = store.trips[0];
+  if (!trip) {
+    go("/planner");
+    return;
+  }
+  if (detailKind.value === "activity") {
+    store.addActivityToTrip(trip.id, detailId.value);
+  } else {
+    store.addDestinationToTrip(trip.id, detailId.value);
+  }
+  showToast("Added to your trip planner");
+}
 </script>
 
 <template>
@@ -183,7 +220,7 @@ const {
               </p>
             </section></template
           >
-          <section v-if="detailReviews.length" class="detail-subsection">
+          <section class="detail-subsection">
             <div class="subsection-heading">
               <div>
                 <p class="eyebrow">TRAVELLER NOTES</p>
@@ -197,10 +234,39 @@ const {
             >
               <div>
                 <b>{{ review.userName }}</b
-                ><span class="stars">★★★★★</span>
+                ><span class="stars">{{ "★".repeat(review.rating) }}</span>
               </div>
               <p>{{ review.comment }}</p>
             </article>
+            <p v-if="!detailReviews.length">Be the first to leave a traveler note.</p>
+            <form class="review-form" @submit.prevent="submitReview">
+              <label class="field-label"
+                >YOUR RATING
+                <select v-model.number="reviewRating" aria-label="Your rating">
+                  <option
+                    v-for="rating in [5, 4, 3, 2, 1]"
+                    :key="rating"
+                    :value="rating"
+                  >
+                    {{ rating }} {{ rating === 1 ? "star" : "stars" }}
+                  </option>
+                </select>
+              </label>
+              <label class="field-label"
+                >YOUR NOTE
+                <textarea
+                  v-model="reviewComment"
+                  rows="3"
+                  minlength="10"
+                  maxlength="1200"
+                  required
+                  placeholder="What should another traveler know?"
+                ></textarea>
+              </label>
+              <button class="button button-outline" type="submit">
+                Add your review <ArrowRight :size="15" />
+              </button>
+            </form>
           </section>
           <section class="map-block">
             <div>
@@ -230,10 +296,7 @@ const {
                 ? ((bookingType = detailKind === 'hotel' ? 'Hotel' : 'Package'),
                   (bookingItem = detailId),
                   go('/bookings'))
-                : (store.trips[0]
-                    ? store.addDestinationToTrip(store.trips[0].id, detailId)
-                    : go('/planner'),
-                  showToast('Added to your trip planner'))
+                : addDetailToTrip()
             "
           >
             {{

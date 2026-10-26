@@ -1,5 +1,5 @@
 import axios, { type AxiosError } from 'axios'
-import type { ApiResponse, User } from '../types'
+import type { ApiResponse, BookingStatus, PaymentStatus, User } from '../types'
 
 export interface AuthResult {
   user: User
@@ -32,15 +32,35 @@ export const api = {
     const response = await client.post<ApiResponse<AuthResult>>('/auth/register', input)
     return response.data
   },
+  async updateBookingPaymentStatus(id: string, paymentStatus: PaymentStatus): Promise<void> {
+    await client.patch(`/bookings/${id}/payment-status`, { paymentStatus: paymentStatus.toUpperCase() })
+  },
+  async updateBookingStatus(id: string, status: BookingStatus): Promise<void> {
+    await client.patch(`/bookings/${id}/status`, { status: status.toUpperCase() })
+  },
   setToken(token: string | null): void {
     if (token) localStorage.setItem('tm-token', token)
     else localStorage.removeItem('tm-token')
   },
   getErrorMessage(error: unknown): string {
-    if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError<{ message?: string }>
-      return axiosError.response?.data.message ?? axiosError.message
+  if (axios.isAxiosError(error)) {
+    const serverMessage = error.response?.data?.message;
+
+    if (typeof serverMessage === 'string') {
+      return serverMessage;
     }
-    return 'An unexpected error occurred'
-  },
+
+    if (error.code === 'ECONNABORTED') {
+      return 'The server took too long to respond. Please try again.';
+    }
+
+    if (!error.response) {
+      return 'Cannot reach the server. Please check that it is running.';
+    }
+
+    return 'The request failed. Please try again.';
+  }
+
+  return 'An unexpected error occurred. Please try again.';
+},
 }

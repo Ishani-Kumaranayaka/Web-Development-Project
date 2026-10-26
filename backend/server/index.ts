@@ -67,6 +67,8 @@ function respondError(error: unknown, _request: Request, response: Response, _ne
     return
   }
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    console.error('Database error code:', error.code);
+console.error('Database error message:', error.message);
     const status = error.code === 'P2025' ? 404 : error.code === 'P2002' ? 409 : 400
     response.status(status).json({ message: error.code === 'P2025' ? 'Record not found' : error.code === 'P2002' ? 'A record with those details already exists' : 'Database request failed' })
     return
@@ -81,7 +83,24 @@ const hotelSchema = z.object({ name: z.string().min(2), description: z.string().
 const activitySchema = z.object({ name: z.string().min(2), description: z.string().min(10), category: z.string().min(2), price: z.number().nonnegative(), duration: z.string(), image: z.string().url(), rating: z.number().min(0).max(5).optional(), destinationId: idParam })
 const packageSchema = z.object({ name: z.string().min(2), description: z.string().min(10), duration: z.string(), price: z.number().nonnegative(), image: z.string().url(), includedActivities: z.array(z.string()), hotelInformation: z.string(), itinerary: z.array(z.object({ day: z.number().int().positive(), place: z.string(), detail: z.string() })), destinationIds: z.array(idParam) })
 
-app.get('/api/health', (_request, response) => response.json({ status: 'ok', databaseConfigured: Boolean(process.env.DATABASE_URL) }))
+app.get('/api/health', asyncRoute(async (_request, response) => {
+  try {
+    await prisma.$runCommandRaw({ ping: 1 });
+
+    response.json({
+      status: 'ok',
+      databaseConnected: true,
+    });
+  } catch (error) {
+    console.error('Database health check failed:', error);
+
+    response.status(503).json({
+      status: 'error',
+      databaseConnected: false,
+      message: 'Cannot connect to the database. Please try again later.',
+    });
+  }
+}));
 
 app.post('/api/auth/register', asyncRoute(async (request, response) => {
   const input = z.object({ name: z.string().min(2), email: z.string().email(), password: z.string().min(8) }).parse(request.body)
@@ -92,7 +111,7 @@ app.post('/api/auth/register', asyncRoute(async (request, response) => {
 }))
 
 app.post('/api/auth/login', asyncRoute(async (request, response) => {
-  const input = z.object({ email: z.string().email(), password: z.string().min(1) }).parse(request.body)
+  const input = z.object({ email: z.string().trim().toLowerCase().email(), password: z.string().min(1) }).parse(request.body)
   const user = await prisma.user.findUnique({ where: { email: input.email } })
   if (!user || !(await bcrypt.compare(input.password, user.password))) {
     response.status(401).json({ message: 'Email or password was not recognized' })
@@ -183,6 +202,10 @@ app.post('/api/bookings', requireAuth, asyncRoute(async (request, response) => {
 app.patch('/api/bookings/:id/status', requireAuth, requireAdmin, asyncRoute(async (request, response) => {
   const { status } = z.object({ status: z.enum(['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED']) }).parse(request.body)
   response.json({ data: await prisma.booking.update({ where: { id: idParam.parse(request.params.id) }, data: { status } }) })
+}))
+app.patch('/api/bookings/:id/payment-status', requireAuth, requireAdmin, asyncRoute(async (request, response) => {
+  const { paymentStatus } = z.object({ paymentStatus: z.enum(['UNPAID', 'PAID', 'REFUNDED']) }).parse(request.body)
+  response.json({ data: await prisma.booking.update({ where: { id: idParam.parse(request.params.id) }, data: { paymentStatus } }) })
 }))
 app.post('/api/bookings/:id/cancel', requireAuth, asyncRoute(async (request, response) => {
   const id = idParam.parse(request.params.id)

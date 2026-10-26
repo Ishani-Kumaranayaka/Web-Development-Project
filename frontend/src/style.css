@@ -10,3 +10,89 @@
 @media(max-width:850px){.topbar{height:68px;padding:0 25px}.desktop-nav{gap:20px;margin-left:0}.desktop-nav button{font-size:11px}.top-actions{gap:12px}.hero-wrap{height:630px;min-height:540px}.hero-copy{top:17%;left:8vw}.hero-copy h1{font-size:69px}.search-band{grid-template-columns:1fr 1fr 52px;row-gap:17px;padding:19px}.search-intro{grid-column:span 1}.search-input:nth-of-type(1){border-left:0;padding-left:0}.search-input.search-guests{display:none}.search-submit{grid-column:3;grid-row:1 / span 2;align-self:center}.section,.content-page{width:calc(100% - 54px)}.section-discover{padding-top:78px}.destination-grid{grid-template-rows:195px 195px}.editorial-strip{min-height:410px}.editorial-photo{height:410px}.editorial-copy{padding:52px 7%}.editorial-copy h2{font-size:40px}.activity-photo{height:185px}.package-feature{min-height:410px}.package-visual{min-height:410px}.package-copy{padding:50px 7%}.package-copy h2{font-size:39px}.detail-layout{width:calc(100% - 54px);grid-template-columns:1fr 245px;gap:33px}.booking-layout{grid-template-columns:340px 1fr;gap:28px}.planner-create{grid-template-columns:40px 155px 1fr;gap:11px;padding:15px}.trip-form{flex-wrap:wrap}.trip-form>input{min-width:125px}.trip-form label>input{max-width:100px}.dashboard-grid{gap:12px}.dashboard-panel{padding:17px}.admin-page{width:calc(100% - 54px)}.status-chart{gap:6px}.donut-chart{width:108px}.site-footer{padding-left:6vw;padding-right:6vw}.footer-top{gap:30px}}
 @media(max-width:620px){.topbar{height:62px;padding:0 17px}.brand{font-size:18px}.brand-mark{width:29px;height:29px}.desktop-nav{display:none}.top-actions{gap:10px}.nav-wishlist{display:none}.profile-button{gap:6px}.profile-name{display:none}.mobile-toggle{display:grid}.mobile-menu{display:flex;position:absolute;top:62px;left:0;right:0;background:#faf9f6;border-bottom:1px solid var(--line);padding:9px 18px 15px;flex-direction:column;box-shadow:0 12px 20px rgba(35,48,36,.08)}.mobile-menu button{width:100%;display:flex;justify-content:space-between;align-items:center;padding:13px 2px;background:transparent;border:0;border-bottom:1px solid #eeede8;text-align:left;font-size:12px}.hero-wrap{height:610px;min-height:0}.hero-image{background-position:58% center}.hero-copy{left:24px;right:22px;top:18%}.hero-copy h1{font-size:64px}.hero-copy .eyebrow{margin-bottom:20px}.hero-subtitle{font-size:12px;max-width:300px}.hero-caption{left:24px;bottom:24px;gap:13px}.hero-vertical{right:15px;bottom:20px;font-size:7px}.search-band{width:calc(100% - 28px);margin-top:-29px;grid-template-columns:1fr 48px;padding:15px 14px;gap:13px}.search-intro{grid-column:1;grid-row:1}.search-intro small{font-size:8px}.search-input{grid-column:1;border-left:0;padding:10px 0 0;border-top:1px solid var(--line)}.search-input:nth-of-type(1){grid-row:2}.search-input:nth-of-type(2){display:none}.search-submit{grid-column:2;grid-row:1 / span 2;width:42px;height:42px}.section,.content-page{width:calc(100% - 36px)}.section-discover{padding:64px 0 59px}.section-heading{align-items:end;gap:12px;margin-bottom:21px}.section-heading h2{font-size:30px;max-width:245px}.section-heading .text-link{font-size:9px;gap:4px}.destination-grid{grid-template-columns:1fr 1fr;grid-template-rows:210px 174px;gap:9px}.tile-1{grid-row:span 1}.tile-3{grid-column:1}.tile-4{grid-column:2}.tile-bottom{left:12px;right:11px;bottom:12px}.tile-bottom h3{font-size:22px}.tile-bottom p{font-size:8px}.tile-top{top:10px;left:10px;right:10px}.tile-top>span{font-size:7px;padding:6px}.save-button{width:29px;height:29px}.tile-arrow{width:29px;height:29px}.editorial-strip{grid-template-columns:1fr}.editorial-photo{height:300px}.editorial-copy{padding:38px 25px 57px}.editorial-copy h2{font-size:40px}.editorial-copy>p:not(.eyebrow){font-size:11px}.experience-section{padding:61px 0}.activity-grid{grid-template-columns:1fr;gap:17px}.activity-photo{height:225px}.activity-info{padding:11px 0}.package-feature{grid-template-columns:1fr}.package-visual{min-height:290px;height:290px}.package-copy{padding:37px 25px 40px}.package-copy h2{font-size:40px}.package-action{align-items:flex-start;flex-direction:column;gap:11px}.quote-section{padding:66px 23px}.quote-section blockquote{font-size:28px}.quote-counter{bottom:18px;right:22px}.home-cta{min-height:245px;padding:40px 25px;align-items:flex-start;flex-direction:column;justify-content:center;gap:23px}.home-cta h2{font-size:37px}.cta-ornament{right:3%;top:-52px;font-size:230px}.floating-planner{right:12px;bottom:12px;padding:11px}.floating-planner span{display:none}.content-page{padding-top:42px;padding-bottom:70px}.page-intro,.workspace-heading{display:block;margin-bottom:27px}.page-intro h1,.workspace-heading h1{font-size:47px}.page-intro-note,.workspace-heading>p{margin:15px 0 0;font-size:10px;max-width:320px}.catalog-tools{flex-wrap:wrap;gap:8px;padding:12px 0}.catalog-search{flex-basis:100%;padding-bottom:11px;border-bottom:1px solid var(--line)}.select-tool{border:0;padding:2px 4px 2px 0}.select-tool select{font-size:9px}.sort-tool{margin-left:auto}.result-count{margin-top:18px}.catalog-grid{grid-template-columns:1fr;gap:15px}.catalog-image{height:225px}.catalog-card-copy{padding:14px}.package-grid{grid-template-columns:1fr}.tour-image{height:235px}.detail-hero{height:390px}.detail-hero-copy{left:23px;bottom:33px}.detail-hero-copy h1{font-size:51px}.detail-save{right:18px;bottom:31px;padding:9px 11px;font-size:9px}.detail-layout{width:calc(100% - 38px);grid-template-columns:1fr;gap:27px;padding-top:28px}.detail-facts{gap:10px 17px;padding-bottom:16px;margin-bottom:23px}.detail-facts span{font-size:9px}.detail-main h2{font-size:27px}.detail-aside{position:static;padding:20px}.detail-aside h3 br{display:none}.mini-row{gap:9px}.mini-row>img{width:52px;height:48px}.mini-row>strong{font-size:9px}.map-block{padding:18px;gap:13px}.map-block h3{font-size:16px}.map-link{font-size:9px;white-space:nowrap}.workspace-page{padding-top:43px}.planner-create{grid-template-columns:38px 1fr;gap:10px;padding:15px}.planner-create-copy h3{font-size:17px}.trip-form{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:9px}.trip-form>input{grid-column:1 / -1}.trip-form label{border:0;padding:0}.trip-form label>input{max-width:100%;width:100%}.trip-form .button{grid-column:1 / -1}.trip-board{padding:19px 14px}.trip-board-heading h2{font-size:22px}.timeline-stop{grid-template-columns:28px 69px 1fr 29px;gap:8px;min-height:78px}.timeline-stop>img{width:69px;height:55px}.timeline-copy h3{font-size:17px}.timeline-copy>p:last-child{font-size:8px}.timeline-marker span{width:24px;height:24px;font-size:8px}.add-destination-row{align-items:flex-start;gap:12px;flex-direction:column}.add-destination-row select{min-width:0;width:230px}.booking-layout{grid-template-columns:1fr;gap:31px}.booking-form-panel{padding:21px 16px}.booking-history{padding-top:0}.history-row{grid-template-columns:31px 1fr auto;gap:8px}.history-copy>b{font-size:10px}.history-copy>small{font-size:7px}.status-pill{font-size:7px;padding:4px 6px}.dashboard-welcome{display:block}.dashboard-welcome h1{font-size:31px}.dashboard-welcome>.button{margin-top:17px}.stat-row{grid-template-columns:1fr 1fr}.stat-block{min-height:111px;padding:12px 15px;border-bottom:1px solid var(--line)}.stat-block:nth-child(2){border-right:0}.stat-block:nth-child(3),.stat-block:nth-child(4){border-bottom:0}.stat-block>svg{right:11px;top:14px}.dashboard-grid,.dashboard-lower{grid-template-columns:1fr;gap:12px}.dashboard-panel{padding:17px}.inspire-visual{height:215px}.activity-log-row{grid-template-columns:26px 1fr}.activity-log-row>small{grid-column:2}.admin-page{width:calc(100% - 36px)}.admin-header{display:block}.admin-header h1{font-size:34px}.admin-user{margin-top:19px}.admin-stats{grid-template-columns:1fr 1fr;padding:10px 0}.admin-stats>div{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.15)}.admin-stats>div:nth-child(2){border-right:0}.admin-stats>div:nth-child(3),.admin-stats>div:nth-child(4){border-bottom:0}.admin-stats b{font-size:24px;margin:5px 0}.admin-main-grid{grid-template-columns:1fr}.admin-panel{padding:16px}.status-chart{justify-content:space-around}.donut-chart{width:113px}.admin-module-row{grid-template-columns:1fr}.admin-table{min-width:680px}.admin-bookings .subsection-heading{align-items:flex-start}.admin-search input{width:80px}.auth-page{grid-template-columns:1fr;padding-top:11px}.auth-image{height:280px;grid-row:2}.auth-copy{padding:33px 13px 30px}.auth-copy h1{font-size:43px}.footer-top{grid-template-columns:1fr;gap:26px}.footer-brand-block>p{font-size:16px}.footer-links{grid-template-columns:1fr 1fr;gap:24px}.footer-newsletter{grid-column:1 / -1}.footer-bottom{flex-wrap:wrap;gap:9px}.footer-bottom>span:first-child{width:100%}.auth-modal{padding:35px 23px 23px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+.password-field { position: relative; }
+.password-field input { width: 100%; padding-right: 44px; }
+.toggle-password {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: 0; cursor: pointer; color: #666;
+  display: flex; align-items: center; padding: 4px;
+}
+.toggle-password:hover { color: #000; }
+/* ===== Auth dialog inputs (name, email, password) ===== */
+.auth-modal .field-label input {
+  display: block;
+  width: 100%;
+  height: 48px;
+  margin-top: 8px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  color: #1f2a24;
+  background: #fbfaf6;
+  border: 1px solid #ddd9cc;
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.auth-modal .field-label input::placeholder {
+  font-weight: 400;
+  color: #a3a69c;
+}
+
+.auth-modal .field-label input:hover {
+  border-color: #c4c0b2;
+}
+
+.auth-modal .field-label input:focus {
+  background: #ffffff;
+  border-color: #2b4a3a;
+  box-shadow: 0 0 0 4px rgba(43, 74, 58, 0.12);
+}
+
+/* Stop Chrome's blue autofill background */
+.auth-modal .field-label input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #fbfaf6 inset;
+  -webkit-text-fill-color: #1f2a24;
+}
+
+/* ===== Password field with show/hide button ===== */
+.auth-modal .password-field {
+  position: relative;
+  margin-top: 8px;
+}
+
+.auth-modal .password-field input {
+  margin-top: 0;          /* spacing is on the wrapper instead */
+  padding-right: 52px;    /* room for the eye button */
+}
+
+.auth-modal .toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: #7a8074;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.auth-modal .toggle-password:hover {
+  background: #eeece4;
+  color: #2b4a3a;
+}
+
+.auth-modal .toggle-password:focus-visible {
+  outline: 2px solid #2b4a3a;
+  outline-offset: 2px;
+}

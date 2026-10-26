@@ -152,6 +152,10 @@ app.patch('/api/bookings/:id/status', requireAuth, requireAdmin, asyncRoute(asyn
     const { status } = z.object({ status: z.enum(['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED']) }).parse(request.body);
     response.json({ data: await prisma.booking.update({ where: { id: idParam.parse(request.params.id) }, data: { status } }) });
 }));
+app.patch('/api/bookings/:id/payment-status', requireAuth, requireAdmin, asyncRoute(async (request, response) => {
+    const { paymentStatus } = z.object({ paymentStatus: z.enum(['UNPAID', 'PAID', 'REFUNDED']) }).parse(request.body);
+    response.json({ data: await prisma.booking.update({ where: { id: idParam.parse(request.params.id) }, data: { paymentStatus } }) });
+}));
 app.post('/api/bookings/:id/cancel', requireAuth, asyncRoute(async (request, response) => {
     const id = idParam.parse(request.params.id);
     const booking = await prisma.booking.findFirstOrThrow({ where: { id, userId: request.authUser.id } });

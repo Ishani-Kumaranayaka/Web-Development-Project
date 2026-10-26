@@ -1,6 +1,7 @@
 export type Role = 'USER' | 'ADMIN'
 export type CatalogKind = 'destination' | 'hotel' | 'activity' | 'package'
 export type BookingStatus = 'Pending' | 'Confirmed' | 'Cancelled' | 'Completed'
+export type PaymentStatus = 'Unpaid' | 'Paid' | 'Refunded'
 
 export interface User {
   id: string
@@ -74,6 +75,7 @@ export interface Booking {
   guests: number
   totalPrice: number
   status: BookingStatus
+  paymentStatus?: PaymentStatus
   createdAt: string
 }
 
@@ -83,6 +85,8 @@ export interface Trip {
   startDate: string
   endDate: string
   destinationIds: string[]
+  activityIds?: string[]
+  transportMode?: 'Train' | 'Bus' | 'Private car'
 }
 
 export interface Review {

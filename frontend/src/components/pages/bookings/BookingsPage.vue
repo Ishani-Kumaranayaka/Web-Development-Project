@@ -134,6 +134,7 @@ const {
                 >{{ formattedDate(booking.checkIn) }} —
                 {{ formattedDate(booking.checkOut) }} ·
                 {{ booking.guests }} guests</small
+              ><small>Payment: {{ booking.paymentStatus ?? "Unpaid" }}</small
               >
             </div>
             <div class="history-end">
