@@ -1,0 +1,3 @@
+.catalog-notice { margin: 16px auto; width: min(90%, 1320px); padding: 14px 18px; border: 1px solid #d9dfd2; background: #f2f5ed; font-size: 14px; }
+.catalog-notice-error { border-color: #d7a89d; background: #fff0ec; color: #7a3226; }
+.catalog-notice .button { margin-left: 12px; }

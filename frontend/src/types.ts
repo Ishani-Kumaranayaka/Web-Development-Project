@@ -23,8 +23,8 @@ export interface Destination {
   bestTime: string
   averageCost: number
   rating: number
-  latitude: number
-  longitude: number
+  latitude?: number | null
+  longitude?: number | null
   tags: string[]
 }
 

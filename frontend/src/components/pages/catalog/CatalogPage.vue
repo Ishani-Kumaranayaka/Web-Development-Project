@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-vue-next";
 import { useAppPageContext } from "../../../context/appPageContext";
+import CatalogManager from "../../admin/CatalogManager.vue";
 
 const {
   activities,
@@ -53,6 +54,7 @@ const {
         }}
       </p>
     </div>
+    <CatalogManager v-if="page === 'destinations' || page === 'hotels'" />
     <div class="catalog-tools">
       <label class="catalog-search"
         ><Search :size="18" /><input
@@ -65,9 +67,7 @@ const {
           aria-label="Filter by province"
         >
           <option>All regions</option>
-          <option>Uva</option>
-          <option>Southern</option>
-          <option>Central</option>
+          <option v-for="province in [...new Set(destinations.map(item => item.province))].sort()" :key="province">{{ province }}</option>
         </select></label
       ><label v-if="page === 'destinations'" class="select-tool"
         ><SlidersHorizontal :size="15" /><select

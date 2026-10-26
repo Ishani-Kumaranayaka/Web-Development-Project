@@ -9,7 +9,8 @@ import {
   Search,
   Sparkles,
 } from "lucide-vue-next";
-import { activities, destinations, hotels, packages } from "../../data";
+import { activities, packages } from "../../data";
+import { destinations, hotels } from "../../services/catalog";
 import { useTravelStore } from "../../stores/travel";
 import type { CatalogKind } from "../../types";
 import HeroBanner from "../home/HeroBanner.vue";
@@ -24,7 +25,7 @@ const emit = defineEmits<{
 
 const store = useTravelStore();
 const recommendedDestinations = computed(() =>
-  destinations.filter((item) => item.id !== "yala").slice(0, 3),
+  destinations.filter((item) => item.name !== "Yala National Park").slice(0, 3),
 );
 
 function price(value: number): string {
@@ -130,7 +131,7 @@ function price(value: number): string {
           class="destination-tile tile-4"
           @click="emit('detail', 'destination', 'mirissa')"
         >
-          <img :src="destinations[3].image" alt="Mirissa beach" />
+          <img :src="destinations[3]?.image" alt="Mirissa beach" />
           <div class="tile-shade"></div>
           <div class="tile-top">
             <span>Coastal days</span
@@ -156,7 +157,7 @@ function price(value: number): string {
     <section class="editorial-strip">
       <div class="editorial-photo">
         <img
-          :src="hotels[0].image"
+          :src="hotels[0]?.image"
           alt="A quiet boutique hotel in the tea country"
         /><span>THE ART OF STAYING AWHILE</span>
       </div>

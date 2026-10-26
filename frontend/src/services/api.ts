@@ -1,4 +1,4 @@
-import axios, { type AxiosError } from 'axios'
+import axios from 'axios'
 import type { ApiResponse, BookingStatus, PaymentStatus, User } from '../types'
 
 export interface AuthResult {

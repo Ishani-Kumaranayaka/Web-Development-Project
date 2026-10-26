@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed, provide, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { activities, destinations, hotels, packages, reviews } from "./data";
+import { activities, packages, reviews } from "./data";
+import { onMounted } from "vue";
+import "./styles/catalog-notice.css";
+import { destinations, hotels, catalogStatus, loadCatalog } from "./services/catalog";
 import AppHeader from "./components/layout/AppHeader.vue";
 import SiteFooter from "./components/layout/SiteFooter.vue";
 import AuthDialog from "./components/auth/AuthDialog.vue";
@@ -24,6 +27,10 @@ import type { CatalogKind } from "./types";
 const route = useRoute();
 const router = useRouter();
 const store = useTravelStore();
+function reloadCatalog(): void {
+  void loadCatalog().catch(() => { /* Error is shown in the banner. */ });
+}
+onMounted(reloadCatalog);
 const detailKind = computed(() => String(route.params.kind ?? ""));
 const detailId = computed(() => String(route.params.id ?? ""));
 const page = computed(() =>
@@ -277,6 +284,14 @@ provide(appPageContextKey, {
   <div class="app-shell">
     <AppHeader />
 
+    <div v-if="catalogStatus.loading" class="catalog-notice" role="status">
+      Loading destinations and stays...
+    </div>
+    <div v-else-if="catalogStatus.error" class="catalog-notice catalog-notice-error" role="alert">
+      Could not load destinations and stays: {{ catalogStatus.error }}
+      <button type="button" class="button button-outline button-small" @click="reloadCatalog">Try again</button>
+    </div>
+
     <MainPage
       v-if="page === 'home'"
       v-model:search-text="searchText"
@@ -303,7 +318,7 @@ provide(appPageContextKey, {
 
     <AdminDashboardPage v-else-if="page === 'admin'" />
 
-    <AuthPage v-else />
+    <AuthPage v-else-if="destinations.length" />
 
     <SiteFooter />
     <AuthDialog />
