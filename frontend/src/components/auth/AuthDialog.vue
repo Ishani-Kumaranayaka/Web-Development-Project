@@ -3,7 +3,7 @@ import { ref, watch } from "vue";
 import { ArrowRight, Compass, X, Eye, EyeOff } from "lucide-vue-next";
 import { useAppPageContext } from "../../context/appPageContext";
 
-const { modal, loginName, loginEmail, loginPassword, loginAsAdmin, signIn } =
+const { modal, loginName, loginEmail, loginPassword,signIn } =
   useAppPageContext();
 
 // Show / hide password
@@ -34,7 +34,6 @@ function resetForm() {
   loginName.value = "";
   loginEmail.value = "";
   loginPassword.value = "";
-  loginAsAdmin.value = false;
   showPassword.value = false;
 }
 
@@ -106,8 +105,8 @@ watch(modal, (isOpen, wasOpen) => {
             <input
               v-model="loginPassword"
               :type="showPassword ? 'text' : 'password'"
-              :required="!loginAsAdmin"
-              :minlength="loginAsAdmin ? undefined : 8"
+              required
+:minlength="modal === 'register' ? 8 : 1"
               placeholder="At least 8 characters"
               :autocomplete="modal === 'login' ? 'current-password' : 'new-password'"
             />
@@ -123,9 +122,7 @@ watch(modal, (isOpen, wasOpen) => {
           </div>
         </label>
 
-        <label class="demo-role">
-          <input v-model="loginAsAdmin" type="checkbox" /> Use local admin demo
-        </label>
+  
 
         <button class="button button-dark wide-button" type="submit">
           {{ modal === "login" ? "Sign in" : "Create account" }}
@@ -145,7 +142,6 @@ watch(modal, (isOpen, wasOpen) => {
         }}
       </button>
 
-      <p class="demo-disclaimer">Demo mode · forms are stored in this browser</p>
     </section>
   </div>
 </template>

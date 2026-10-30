@@ -31,7 +31,6 @@ export interface AppPageContext {
   loginEmail: Ref<string>;
   loginName: Ref<string>;
   loginPassword: Ref<string>;
-  loginAsAdmin: Ref<boolean>;
   tripName: Ref<string>;
   tripStart: Ref<string>;
   tripEnd: Ref<string>;
@@ -62,6 +61,7 @@ export interface AppPageContext {
   createTrip: () => void;
   bookStay: () => void;
   signIn: () => Promise<void>;
+  signOut: () => void;
   price: (value: number) => string;
   formattedDate: (value: string) => string;
 }

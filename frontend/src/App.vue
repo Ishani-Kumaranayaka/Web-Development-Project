@@ -44,10 +44,9 @@ const provinceFilter = ref("All regions");
 const categoryFilter = ref("All types");
 const sortBy = ref("Recommended");
 const modal = ref<"login" | "register" | "">("");
-const loginEmail = ref("alex@example.com");
-const loginName = ref("Alex Morgan");
+const loginEmail = ref("");
+const loginName = ref("");
 const loginPassword = ref("");
-const loginAsAdmin = ref(false);
 const tripName = ref("");
 const tripStart = ref("2026-11-04");
 const tripEnd = ref("2026-11-12");
@@ -143,6 +142,7 @@ function showToast(message: string): void {
   }, 2600);
 }
 function toggleSave(kind: CatalogKind, id: string): void {
+   if (!requireAccount()) return
   const exists = store.wishlist.some(
     (item) => item.kind === kind && item.itemId === id,
   );
@@ -153,6 +153,7 @@ function openDetail(kind: CatalogKind, id: string): void {
   void router.push(`/${kind}/${id}`);
 }
 function createTrip(): void {
+  if (!requireAccount()) return
   if (
     !tripName.value.trim() ||
     !tripStart.value ||
@@ -160,11 +161,13 @@ function createTrip(): void {
     tripEnd.value < tripStart.value
   )
     return;
+   
   store.createTrip(tripName.value.trim(), tripStart.value, tripEnd.value);
   tripName.value = "";
   showToast("Your new journey is ready");
 }
 function bookStay(): void {
+  if (!requireAccount()) return
   if (
     !selectedBooking.value ||
     !bookingStart.value ||
@@ -219,6 +222,43 @@ async function signIn(): Promise<void> {
   }
 }
 
+function signOut(): void {
+  store.logout()
+  modal.value = ''
+  mobileMenu.value = false
+  showToast('You are signed out')
+  void router.replace('/')
+}
+
+watch(() => store.user?.id, () => {
+  mobileMenu.value = false
+  modal.value = ''
+
+  loginName.value = ''
+  loginEmail.value = ''
+  loginPassword.value = ''
+
+  tripName.value = ''
+  tripStart.value = ''
+  tripEnd.value = ''
+
+  bookingStart.value = ''
+  bookingEnd.value = ''
+  specialRequest.value = ''
+  guests.value = 2
+
+  bookingType.value = 'Hotel'
+  bookingItem.value = bookingOptions.value[0]?.id ?? ''
+}, { flush: 'sync' })
+
+function requireAccount(): boolean {
+  if (store.user) return true
+
+  modal.value = 'login'
+  showToast('Please sign in first.')
+  return false
+}
+
 function price(value: number): string {
   return `$${value.toLocaleString()}`;
 }
@@ -244,7 +284,6 @@ provide(appPageContextKey, {
   loginEmail,
   loginName,
   loginPassword,
-  loginAsAdmin,
   tripName,
   tripStart,
   tripEnd,
@@ -275,6 +314,7 @@ provide(appPageContextKey, {
   createTrip,
   bookStay,
   signIn,
+  signOut,
   price,
   formattedDate,
 });
@@ -283,6 +323,13 @@ provide(appPageContextKey, {
 <template>
   <div class="app-shell">
     <AppHeader />
+    <div
+  v-if="store.sessionError"
+  class="catalog-notice catalog-notice-error"
+  role="alert"
+>
+  {{ store.sessionError }}
+</div>
 
     <div v-if="catalogStatus.loading" class="catalog-notice" role="status">
       Loading destinations and stays...
@@ -318,7 +365,7 @@ provide(appPageContextKey, {
 
     <AdminDashboardPage v-else-if="page === 'admin'" />
 
-    <AuthPage v-else-if="destinations.length" />
+   <AuthPage v-else />
 
     <SiteFooter />
     <AuthDialog />

@@ -26,18 +26,53 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0, behavior: "smooth" }),
 });
 
-router.beforeEach((to) => {
-  const user = useTravelStore().user;
+router.beforeEach(async to => {
+  const store = useTravelStore()
 
-  if (to.path === "/admin/dashboard") {
-    if (!user) return { path: "/login", query: { redirect: to.fullPath } };
-    if (user.role !== "ADMIN") return "/dashboard";
+  await store.restoreSession()
+
+  const targetPath =
+    to.path.replace(/\/+$/, '').toLowerCase() || '/'
+
+  const protectedPaths = [
+    '/planner',
+    '/wishlist',
+    '/bookings',
+    '/dashboard',
+    '/profile',
+    '/admin/dashboard',
+  ]
+
+  const requiresAdmin =
+    targetPath === '/admin/dashboard' ||
+    Boolean(to.meta.requiresAdmin)
+
+  if (
+    (protectedPaths.includes(targetPath) || requiresAdmin) &&
+    !store.user
+  ) {
+    return {
+      path: '/login',
+      query: { redirect: to.fullPath },
+    }
   }
 
-  if (to.path === "/dashboard") {
-    if (!user) return { path: "/login", query: { redirect: to.fullPath } };
-    if (user.role === "ADMIN") return "/admin/dashboard";
+  if (requiresAdmin && !store.isAdmin) {
+    return '/dashboard'
   }
-});
+
+  if (targetPath === '/dashboard' && store.isAdmin) {
+    return '/admin/dashboard'
+  }
+
+  if (
+    (targetPath === '/login' || targetPath === '/register') &&
+    store.user
+  ) {
+    return store.isAdmin
+      ? '/admin/dashboard'
+      : '/dashboard'
+  }
+})
 
 export default router;

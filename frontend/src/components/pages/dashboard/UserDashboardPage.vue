@@ -11,7 +11,7 @@ import {
 import { useAppPageContext } from "../../../context/appPageContext";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
-const { store, destinations, go, openDetail, showToast, formattedDate } =
+const { store, destinations, go, openDetail, showToast, formattedDate,signOut } =
   useAppPageContext();
 
   const currentTime = ref(new Date());
@@ -51,6 +51,8 @@ const todayLabel = computed(() =>
     })
     .toUpperCase(),
 );
+
+
 </script>
 
 <template>
@@ -203,10 +205,7 @@ const todayLabel = computed(() =>
           class="quiet-button"
           aria-label="Sign out"
           title="Sign out"
-          @click="
-            store.user = null;
-            showToast('You are signed out');
-          "
+          @click="signOut"
         >
           <ArrowUpRight :size="17" />
         </button>

@@ -20,6 +20,11 @@ client.interceptors.request.use(config => {
 })
 
 export const api = {
+    async me(): Promise<ApiResponse<User>> {
+    const response = await client.get<ApiResponse<User>>('/auth/me')
+    return response.data
+  },
+  
   async health(): Promise<ApiHealth> {
     const response = await client.get<ApiHealth>('/health')
     return response.data
