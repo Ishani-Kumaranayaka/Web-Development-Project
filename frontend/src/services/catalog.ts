@@ -65,3 +65,33 @@ export async function addHotel(input: HotelInput): Promise<void> {
   hotels.push(response.data.data)
   hotels.sort((a, b) => a.name.localeCompare(b.name))
 }
+
+export async function updateDestination(
+  id: string,
+  input: Partial<DestinationInput>,
+): Promise<void> {
+  const response = await client.patch<ApiResponse<Destination>>(
+    `/destinations/${id}`,
+    input,
+  )
+
+  const updated = normalizeDestination(response.data.data)
+
+  const index = destinations.findIndex(item => item.id === id)
+
+  if (index !== -1) {
+    destinations.splice(index, 1, updated)
+  }
+
+  destinations.sort((a, b) => a.name.localeCompare(b.name))
+}
+
+export async function deleteDestination(id: string): Promise<void> {
+  await client.delete(`/destinations/${id}`)
+
+  const index = destinations.findIndex(item => item.id === id)
+
+  if (index !== -1) {
+    destinations.splice(index, 1)
+  }
+}
