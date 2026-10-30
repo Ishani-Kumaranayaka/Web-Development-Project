@@ -236,6 +236,12 @@ async function save(): Promise<void> {
     saving.value = false
   }
 }
+defineExpose({
+  openEdit,
+  cancelForm,
+  editingId,
+  saving,
+})
 </script>
 
 <template>

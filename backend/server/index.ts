@@ -140,13 +140,237 @@ app.get('/api/destinations', asyncRoute(async (request, response) => {
 app.get('/api/destinations/:id', asyncRoute(async (request, response) => response.json({ data: await prisma.destination.findUniqueOrThrow({ where: { id: idParam.parse(request.params.id) }, include: { hotels: true, activities: true } }) })))
 app.post('/api/destinations', requireAuth, requireAdmin, asyncRoute(async (request, response) => response.status(201).json({ data: await prisma.destination.create({ data: destinationSchema.parse(request.body) }) })))
 app.patch('/api/destinations/:id', requireAuth, requireAdmin, asyncRoute(async (request, response) => response.json({ data: await prisma.destination.update({ where: { id: idParam.parse(request.params.id) }, data: destinationSchema.partial().parse(request.body) }) })))
-app.delete('/api/destinations/:id', requireAuth, requireAdmin, asyncRoute(async (request, response) => { await prisma.destination.delete({ where: { id: idParam.parse(request.params.id) } }); response.status(204).end() }))
+app.delete(
+  '/api/destinations/:id',
+  requireAuth,
+  requireAdmin,
+  asyncRoute(async (request, response) => {
+    const id = idParam.parse(request.params.id)
 
+    try {
+      const result = await prisma.$transaction(async tx => {
+        const destination = await tx.destination.findUnique({
+          where: { id },
+          select: {
+            name: true,
+            _count: {
+              select: {
+                hotels: true,
+                activities: true,
+                tripItems: true,
+                packageItems: true,
+                reviews: true,
+              },
+            },
+          },
+        })
+
+        if (!destination) {
+          return {
+            status: 404,
+            message: 'Destination not found.',
+          }
+        }
+
+        const wishlistItems = await tx.wishlist.count({
+          where: {
+            kind: 'DESTINATION',
+            itemId: id,
+          },
+        })
+
+        const linked = [
+          {
+            label: 'hotels',
+            count: destination._count.hotels,
+          },
+          {
+            label: 'activities',
+            count: destination._count.activities,
+          },
+          {
+            label: 'trip stops',
+            count: destination._count.tripItems,
+          },
+          {
+            label: 'package links',
+            count: destination._count.packageItems,
+          },
+          {
+            label: 'reviews',
+            count: destination._count.reviews,
+          },
+          {
+            label: 'wishlist items',
+            count: wishlistItems,
+          },
+        ]
+          .filter(item => item.count > 0)
+          .map(item => item.label + ': ' + item.count)
+
+        if (linked.length > 0) {
+          return {
+            status: 409,
+            message:
+              'Cannot delete "' +
+              destination.name +
+              '". Linked records: ' +
+              linked.join(', ') +
+              '. Remove or reassign these links first.',
+          }
+        }
+
+        await tx.destination.delete({
+          where: { id },
+        })
+
+        return {
+          status: 204,
+          message: '',
+        }
+      })
+
+      if (result.status === 204) {
+        response.status(204).end()
+        return
+      }
+
+      response.status(result.status).json({
+        message: result.message,
+      })
+    } catch (error: unknown) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2003' || error.code === 'P2014') {
+          response.status(409).json({
+            message:
+              'This destination still has linked records. Remove or reassign those links before deleting it.',
+          })
+          return
+        }
+
+        if (error.code === 'P2034') {
+          response.status(409).json({
+            message:
+              'The data changed while deleting. Refresh the page and try again.',
+          })
+          return
+        }
+      }
+
+      throw error
+    }
+  }),
+)
 app.get('/api/hotels', asyncRoute(async (_request, response) => response.json({ data: await prisma.hotel.findMany({ include: { destination: true } }) })))
 app.get('/api/hotels/:id', asyncRoute(async (request, response) => response.json({ data: await prisma.hotel.findUniqueOrThrow({ where: { id: idParam.parse(request.params.id) }, include: { destination: true, reviews: { include: { user: { select: { name: true } } } } } }) })))
 app.post('/api/hotels', requireAuth, requireAdmin, asyncRoute(async (request, response) => response.status(201).json({ data: await prisma.hotel.create({ data: hotelSchema.parse(request.body) }) })))
 app.patch('/api/hotels/:id', requireAuth, requireAdmin, asyncRoute(async (request, response) => response.json({ data: await prisma.hotel.update({ where: { id: idParam.parse(request.params.id) }, data: hotelSchema.partial().parse(request.body) }) })))
-app.delete('/api/hotels/:id', requireAuth, requireAdmin, asyncRoute(async (request, response) => { await prisma.hotel.delete({ where: { id: idParam.parse(request.params.id) } }); response.status(204).end() }))
+app.delete(
+  '/api/hotels/:id',
+  requireAuth,
+  requireAdmin,
+  asyncRoute(async (request, response) => {
+    const id = idParam.parse(request.params.id)
+
+    try {
+      const result = await prisma.$transaction(async tx => {
+        const hotel = await tx.hotel.findUnique({
+          where: { id },
+          select: {
+            name: true,
+            _count: {
+              select: {
+                bookings: true,
+                reviews: true,
+              },
+            },
+          },
+        })
+
+        if (!hotel) {
+          return {
+            status: 404,
+            message: 'Hotel not found.',
+          }
+        }
+
+        const wishlistItems = await tx.wishlist.count({
+          where: {
+            kind: 'HOTEL',
+            itemId: id,
+          },
+        })
+
+        const linked = [
+          {
+            label: 'bookings',
+            count: hotel._count.bookings,
+          },
+          {
+            label: 'reviews',
+            count: hotel._count.reviews,
+          },
+          {
+            label: 'wishlist items',
+            count: wishlistItems,
+          },
+        ]
+          .filter(item => item.count > 0)
+          .map(item => item.label + ': ' + item.count)
+
+        if (linked.length > 0) {
+          return {
+            status: 409,
+            message:
+              'Cannot delete "' +
+              hotel.name +
+              '". Linked records: ' +
+              linked.join(', ') +
+              '. Remove or reassign these links first.',
+          }
+        }
+
+        await tx.hotel.delete({
+          where: { id },
+        })
+
+        return {
+          status: 204,
+          message: '',
+        }
+      })
+
+      if (result.status === 204) {
+        response.status(204).end()
+        return
+      }
+
+      response.status(result.status).json({
+        message: result.message,
+      })
+    } catch (error: unknown) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2003' || error.code === 'P2014') {
+          response.status(409).json({
+            message:
+              'This hotel still has linked records and cannot be deleted.',
+          })
+          return
+        }
+
+        if (error.code === 'P2034') {
+          response.status(409).json({
+            message:
+              'The data changed while deleting. Refresh the page and try again.',
+          })
+          return
+        }
+      }
+
+      throw error
+    }
+  }),
+)
 
 app.get('/api/activities', asyncRoute(async (_request, response) => response.json({ data: await prisma.activity.findMany({ include: { destination: true } }) })))
 app.post('/api/activities', requireAuth, requireAdmin, asyncRoute(async (request, response) => response.status(201).json({ data: await prisma.activity.create({ data: activitySchema.parse(request.body) }) })))

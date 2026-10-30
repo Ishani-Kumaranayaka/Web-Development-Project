@@ -95,3 +95,12 @@ export async function deleteDestination(id: string): Promise<void> {
     destinations.splice(index, 1)
   }
 }
+export async function deleteHotel(id: string): Promise<void> {
+  await client.delete(`/hotels/${id}`)
+
+  const index = hotels.findIndex(item => item.id === id)
+
+  if (index !== -1) {
+    hotels.splice(index, 1)
+  }
+}
