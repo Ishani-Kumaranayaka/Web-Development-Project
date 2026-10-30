@@ -2,7 +2,11 @@ import axios from 'axios'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { destinations } from '../data'
-import { api } from '../services/api'
+import {
+  api,
+  type CreateBookingInput,
+  type DatabaseBooking,
+} from '../services/api'
 import type {
   Booking,
   CatalogKind,
@@ -15,13 +19,13 @@ import type {
 type PersonalData = {
   wishlist: WishlistItem[]
   trips: Trip[]
-  bookings: Booking[]
   userReviews: Review[]
 }
 
 function restore<T>(key: string, fallback: T): T {
   try {
     const value = localStorage.getItem(key)
+
     return value ? JSON.parse(value) as T : fallback
   } catch {
     return fallback
@@ -30,10 +34,16 @@ function restore<T>(key: string, fallback: T): T {
 
 export const useTravelStore = defineStore('travel', () => {
   const user = ref<User | null>(null)
+
   const wishlist = ref<WishlistItem[]>([])
   const trips = ref<Trip[]>([])
-  const bookings = ref<Booking[]>([])
   const userReviews = ref<Review[]>([])
+
+  const bookings = ref<DatabaseBooking[]>([])
+  const bookingsLoading = ref(false)
+  const bookingsError = ref('')
+  const bookingSaving = ref(false)
+
   const sessionError = ref('')
 
   const isAdmin = computed(() => user.value?.role === 'ADMIN')
@@ -53,7 +63,8 @@ export const useTravelStore = defineStore('travel', () => {
   let sessionChecked = false
   let sessionRequest: Promise<void> | null = null
 
-  // Load only the current account's saved browser data.
+  // Restore browser data belonging to the current account.
+  // Bookings are loaded separately from the backend.
   watch(user, (current, previous) => {
     sessionError.value = ''
 
@@ -77,10 +88,6 @@ export const useTravelStore = defineStore('travel', () => {
         ? saved.trips
         : []
 
-      bookings.value = Array.isArray(saved?.bookings)
-        ? saved.bookings
-        : []
-
       userReviews.value = Array.isArray(saved?.userReviews)
         ? saved.userReviews
         : []
@@ -88,17 +95,18 @@ export const useTravelStore = defineStore('travel', () => {
       switchingAccount = false
     }
 
-    if (!current) api.setToken(null)
+    if (!current) {
+      api.setToken(null)
+    }
   }, { flush: 'sync' })
 
-  // Save each account's browser data under its own key.
-  watch([wishlist, trips, bookings, userReviews], () => {
+  // Bookings are excluded from browser persistence.
+  watch([wishlist, trips, userReviews], () => {
     if (switchingAccount || !user.value) return
 
     const data: PersonalData = {
       wishlist: wishlist.value,
       trips: trips.value,
-      bookings: bookings.value,
       userReviews: userReviews.value,
     }
 
@@ -127,7 +135,7 @@ export const useTravelStore = defineStore('travel', () => {
 
     sessionRequest = api.me()
       .then(response => {
-        // Ignore an old response if the token changed meanwhile.
+        // Ignore a response belonging to an earlier session.
         if (localStorage.getItem('tm-token') === token) {
           user.value = response.data
           sessionError.value = ''
@@ -140,11 +148,15 @@ export const useTravelStore = defineStore('travel', () => {
           ? error.response?.status
           : undefined
 
-        if (status === 401 || status === 403 || status === 404) {
+        if (
+          status === 401 ||
+          status === 403 ||
+          status === 404
+        ) {
           logout()
           sessionError.value = 'Please sign in again.'
         } else {
-          // Keep the token when the server is temporarily unreachable.
+          // Preserve the token during temporary connection failures.
           sessionError.value = api.getErrorMessage(error)
         }
       })
@@ -156,7 +168,134 @@ export const useTravelStore = defineStore('travel', () => {
     return sessionRequest
   }
 
-  function toggleWishlist(kind: CatalogKind, itemId: string): void {
+  // Database bookings
+
+  let bookingVersion = 0
+
+  function isBookingSessionCurrent(
+    accountId: string,
+    token: string | null,
+    version: number,
+  ): boolean {
+    return (
+      user.value?.id === accountId &&
+      localStorage.getItem('tm-token') === token &&
+      bookingVersion === version
+    )
+  }
+
+  async function loadBookings(): Promise<void> {
+    if (
+      !user.value ||
+      bookingsLoading.value ||
+      bookingSaving.value
+    ) {
+      return
+    }
+
+    const accountId = user.value.id
+    const token = localStorage.getItem('tm-token')
+    const version = ++bookingVersion
+
+    bookingsLoading.value = true
+    bookingsError.value = ''
+
+    try {
+      const response = await api.getBookings('mine')
+
+      if (isBookingSessionCurrent(accountId, token, version)) {
+        bookings.value = response.data
+      }
+    } catch (error) {
+      if (isBookingSessionCurrent(accountId, token, version)) {
+        bookingsError.value = api.getErrorMessage(error)
+      }
+    } finally {
+      if (isBookingSessionCurrent(accountId, token, version)) {
+        bookingsLoading.value = false
+      }
+    }
+  }
+
+  async function runBookingChange(
+    request: () => Promise<{ data: DatabaseBooking }>,
+    apply: (booking: DatabaseBooking) => void,
+  ): Promise<void> {
+    if (!user.value) {
+      throw new Error('Please sign in first.')
+    }
+
+    if (bookingSaving.value) {
+      throw new Error('Please wait for the current request.')
+    }
+
+    const accountId = user.value.id
+    const token = localStorage.getItem('tm-token')
+    const version = ++bookingVersion
+
+    bookingsLoading.value = false
+    bookingsError.value = ''
+    bookingSaving.value = true
+
+    try {
+      const response = await request()
+
+      if (isBookingSessionCurrent(accountId, token, version)) {
+        apply(response.data)
+      }
+    } finally {
+      if (isBookingSessionCurrent(accountId, token, version)) {
+        bookingSaving.value = false
+      }
+    }
+  }
+
+  async function createBooking(
+    input: CreateBookingInput,
+  ): Promise<void> {
+    await runBookingChange(
+      () => api.createBooking(input),
+      saved => {
+        bookings.value.unshift(saved)
+      },
+    )
+  }
+
+  async function cancelBooking(id: string): Promise<void> {
+    await runBookingChange(
+      () => api.cancelBooking(id),
+      saved => {
+        const index = bookings.value.findIndex(
+          item => item.id === id,
+        )
+
+        if (index !== -1) {
+          bookings.value.splice(index, 1, saved)
+        }
+      },
+    )
+  }
+
+  // Clear the previous account's bookings and ignore its late responses.
+  watch(() => user.value?.id, () => {
+    bookingVersion++
+
+    bookings.value = []
+    bookingsLoading.value = false
+    bookingsError.value = ''
+    bookingSaving.value = false
+
+    if (user.value) {
+      void loadBookings()
+    }
+  }, { immediate: true, flush: 'sync' })
+
+  // Wishlist
+
+  function toggleWishlist(
+    kind: CatalogKind,
+    itemId: string,
+  ): void {
     if (!user.value) return
 
     const index = wishlist.value.findIndex(
@@ -173,6 +312,8 @@ export const useTravelStore = defineStore('travel', () => {
       })
     }
   }
+
+  // Trips
 
   function createTrip(
     name: string,
@@ -198,9 +339,14 @@ export const useTravelStore = defineStore('travel', () => {
   ): void {
     if (!user.value) return
 
-    const trip = trips.value.find(item => item.id === tripId)
+    const trip = trips.value.find(
+      item => item.id === tripId,
+    )
 
-    if (trip && !trip.destinationIds.includes(destinationId)) {
+    if (
+      trip &&
+      !trip.destinationIds.includes(destinationId)
+    ) {
       trip.destinationIds.push(destinationId)
     }
   }
@@ -211,7 +357,9 @@ export const useTravelStore = defineStore('travel', () => {
   ): void {
     if (!user.value) return
 
-    const trip = trips.value.find(item => item.id === tripId)
+    const trip = trips.value.find(
+      item => item.id === tripId,
+    )
 
     if (trip) {
       trip.activityIds ??= []
@@ -228,7 +376,9 @@ export const useTravelStore = defineStore('travel', () => {
   ): void {
     if (!user.value) return
 
-    const trip = trips.value.find(item => item.id === tripId)
+    const trip = trips.value.find(
+      item => item.id === tripId,
+    )
 
     if (trip) {
       trip.activityIds = (trip.activityIds ?? []).filter(
@@ -243,26 +393,16 @@ export const useTravelStore = defineStore('travel', () => {
   ): void {
     if (!user.value) return
 
-    const trip = trips.value.find(item => item.id === tripId)
+    const trip = trips.value.find(
+      item => item.id === tripId,
+    )
 
-    if (trip) trip.transportMode = transportMode
+    if (trip) {
+      trip.transportMode = transportMode
+    }
   }
 
-  function createBooking(
-    input: Omit<Booking, 'id' | 'userId' | 'status' | 'createdAt'>,
-  ): void {
-    if (!user.value) return
-
-    bookings.value.unshift({
-      ...input,
-      id: 'BK-' + crypto.randomUUID(),
-      userId: user.value.id,
-      status: 'Pending',
-      paymentStatus: 'Unpaid',
-      createdAt: new Date().toISOString().slice(0, 10),
-    })
-  }
-
+  // Update the cached row after the admin page saves through the API.
   function setPaymentStatus(
     bookingId: string,
     paymentStatus: Booking['paymentStatus'],
@@ -273,8 +413,12 @@ export const useTravelStore = defineStore('travel', () => {
       item => item.id === bookingId,
     )
 
-    if (booking) booking.paymentStatus = paymentStatus
+    if (booking) {
+      booking.paymentStatus = paymentStatus
+    }
   }
+
+  // Reviews
 
   function addReview(
     itemType: CatalogKind,
@@ -301,18 +445,23 @@ export const useTravelStore = defineStore('travel', () => {
     wishlist,
     trips,
     bookings,
+    bookingsLoading,
+    bookingsError,
+    bookingSaving,
     userReviews,
     sessionError,
     isAdmin,
     restoreSession,
     logout,
+    loadBookings,
+    createBooking,
+    cancelBooking,
     toggleWishlist,
     createTrip,
     addDestinationToTrip,
     addActivityToTrip,
     removeActivityFromTrip,
     setTripTransport,
-    createBooking,
     setPaymentStatus,
     addReview,
     destinations,

@@ -54,12 +54,14 @@ export interface AppPageContext {
   bookingNights: ComputedRef<number>;
   bookingTotal: ComputedRef<number>;
   detailReviews: ComputedRef<Review[]>;
+  bookingError: Ref<string>;
+tripError: Ref<string>;
   go: (path: string) => void;
   showToast: (message: string) => void;
   toggleSave: (kind: CatalogKind, id: string) => void;
   openDetail: (kind: CatalogKind, id: string) => void;
   createTrip: () => void;
-  bookStay: () => void;
+ bookStay: () => Promise<void>;
   signIn: () => Promise<void>;
   signOut: () => void;
   price: (value: number) => string;
