@@ -3,8 +3,7 @@ import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { ArrowRight, ArrowUpRight, Heart } from "lucide-vue-next";
 
-import { activities, packages } from "../../data";
-import { destinations, hotels } from "../../services/catalog";
+import { destinations, hotels, activities, packages } from "../../services/catalog";
 import { useAppPageContext } from "../../context/appPageContext";
 import type { CatalogKind } from "../../types";
 

@@ -2,7 +2,7 @@
 import { ArrowRight, Compass } from "lucide-vue-next";
 import { useAppPageContext } from "../../context/appPageContext";
 
-const { go, showToast } = useAppPageContext();
+const { go, showToast, store } = useAppPageContext();
 </script>
 
 <template>
@@ -26,7 +26,7 @@ const { go, showToast } = useAppPageContext();
         <div>
           <p class="eyebrow">YOUR TRAVELMATE</p>
           <button @click="go('/planner')">Trip planner</button
-          ><button @click="go('/wishlist')">Saved places</button
+          ><button v-if="!store.isAdmin" @click="go('/wishlist')">Saved places</button
           ><button @click="go('/bookings')">Bookings</button
           ><button @click="go('/dashboard')">My account</button>
         </div>

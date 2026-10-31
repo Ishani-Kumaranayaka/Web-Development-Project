@@ -61,6 +61,10 @@ router.beforeEach(async to => {
     return '/dashboard'
   }
 
+  if (targetPath === '/wishlist' && store.isAdmin) {
+    return '/admin/dashboard'
+  }
+
   if (targetPath === '/dashboard' && store.isAdmin) {
     return '/admin/dashboard'
   }

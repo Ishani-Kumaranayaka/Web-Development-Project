@@ -9,8 +9,7 @@ import {
   Search,
   Sparkles,
 } from "lucide-vue-next";
-import { activities, packages } from "../../data";
-import { destinations, hotels } from "../../services/catalog";
+import { destinations, hotels, activities, packages } from "../../services/catalog";
 import { useTravelStore } from "../../stores/travel";
 import type { CatalogKind } from "../../types";
 import HeroBanner from "../home/HeroBanner.vue";
@@ -29,7 +28,7 @@ const recommendedDestinations = computed(() =>
 );
 
 function price(value: number): string {
-  return `$${value.toLocaleString()}`;
+  return new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', currencyDisplay: 'code' }).format(value);
 }
 </script>
 
@@ -101,6 +100,7 @@ function price(value: number): string {
           <div class="tile-top">
             <span>{{ destination.category }}</span
             ><button
+              v-if="!store.isAdmin"
               class="save-button"
               :aria-label="`Save ${destination.name}`"
               @click.stop="emit('save', 'destination', destination.id)"
@@ -136,6 +136,7 @@ function price(value: number): string {
           <div class="tile-top">
             <span>Coastal days</span
             ><button
+              v-if="!store.isAdmin"
               class="save-button"
               aria-label="Save Mirissa"
               @click.stop="emit('save', 'destination', 'mirissa')"
@@ -196,6 +197,7 @@ function price(value: number): string {
         >
           <div class="activity-photo">
             <img :src="activity.image" :alt="activity.name" /><button
+              v-if="!store.isAdmin"
               class="save-button"
               :aria-label="`Save ${activity.name}`"
               @click.stop="emit('save', 'activity', activity.id)"
@@ -222,7 +224,7 @@ function price(value: number): string {
       </div>
     </section>
 
-    <section class="package-feature">
+    <section v-if="packages[0]" class="package-feature">
       <div class="package-visual">
         <img :src="packages[0].image" alt="Sri Lankan mountain scenery" /><span
           class="package-stamp"
@@ -235,12 +237,11 @@ function price(value: number): string {
           One island.<br /><em>A hundred ways<br />to feel it.</em>
         </h2>
         <p>
-          Five days, thoughtfully paced. From the first cup of Ceylon tea to the
-          last light on the southern coast.
+          {{ packages[0].description }}
         </p>
         <div class="package-meta">
-          <span><CalendarDays :size="16" /> 5 days / 4 nights</span
-          ><span><MapPin :size="16" /> 4 regions</span>
+          <span><CalendarDays :size="16" /> {{ packages[0].duration }}</span
+          ><span><MapPin :size="16" /> {{ packages[0].destinationIds.length }} stops</span>
         </div>
         <div class="package-action">
           <button

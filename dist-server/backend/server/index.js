@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { createDemoPaymentHandler, isDemoPaymentEnabled } from './demoPayments.js';
+import { createExperienceJourneyRouter } from './experienceJourneys.js';
 const app = express();
 const prisma = new PrismaClient();
 const port = Number(process.env.API_PORT ?? 4000);
@@ -115,31 +116,6 @@ const hotelSchema = z.object({
     image: z.string().url(),
     facilities: z.array(z.string()),
     destinationId: idParam,
-});
-const activitySchema = z.object({
-    name: z.string().min(2),
-    description: z.string().min(10),
-    category: z.string().min(2),
-    price: z.number().nonnegative(),
-    duration: z.string(),
-    image: z.string().url(),
-    rating: z.number().min(0).max(5).optional(),
-    destinationId: idParam,
-});
-const packageSchema = z.object({
-    name: z.string().min(2),
-    description: z.string().min(10),
-    duration: z.string(),
-    price: z.number().nonnegative(),
-    image: z.string().url(),
-    includedActivities: z.array(z.string()),
-    hotelInformation: z.string(),
-    itinerary: z.array(z.object({
-        day: z.number().int().positive(),
-        place: z.string(),
-        detail: z.string(),
-    })),
-    destinationIds: z.array(idParam),
 });
 const bookingInclude = {
     hotel: true,
@@ -544,122 +520,8 @@ app.delete('/api/hotels/:id', requireAuth, requireAdmin, asyncRoute(async (reque
         throw error;
     }
 }));
-// Activities
-app.get('/api/activities', asyncRoute(async (_request, response) => {
-    const activities = await prisma.activity.findMany({
-        include: {
-            destination: true,
-        },
-    });
-    response.json({ data: activities });
-}));
-app.post('/api/activities', requireAuth, requireAdmin, asyncRoute(async (request, response) => {
-    const activity = await prisma.activity.create({
-        data: activitySchema.parse(request.body),
-    });
-    response.status(201).json({ data: activity });
-}));
-app.patch('/api/activities/:id', requireAuth, requireAdmin, asyncRoute(async (request, response) => {
-    const activity = await prisma.activity.update({
-        where: {
-            id: idParam.parse(request.params.id),
-        },
-        data: activitySchema.partial().parse(request.body),
-    });
-    response.json({ data: activity });
-}));
-app.delete('/api/activities/:id', requireAuth, requireAdmin, asyncRoute(async (request, response) => {
-    await prisma.activity.delete({
-        where: {
-            id: idParam.parse(request.params.id),
-        },
-    });
-    response.status(204).end();
-}));
-// Packages
-app.get('/api/packages', asyncRoute(async (_request, response) => {
-    const packages = await prisma.tourPackage.findMany({
-        include: {
-            destinations: {
-                include: {
-                    destination: true,
-                },
-                orderBy: {
-                    order: 'asc',
-                },
-            },
-        },
-    });
-    response.json({ data: packages });
-}));
-app.post('/api/packages', requireAuth, requireAdmin, asyncRoute(async (request, response) => {
-    const input = packageSchema.parse(request.body);
-    const tourPackage = await prisma.tourPackage.create({
-        data: {
-            name: input.name,
-            description: input.description,
-            duration: input.duration,
-            price: input.price,
-            image: input.image,
-            includedActivities: input.includedActivities,
-            hotelInformation: input.hotelInformation,
-            itinerary: input.itinerary,
-            destinations: {
-                create: input.destinationIds.map((destinationId, order) => ({
-                    order,
-                    destination: {
-                        connect: {
-                            id: destinationId,
-                        },
-                    },
-                })),
-            },
-        },
-        include: {
-            destinations: true,
-        },
-    });
-    response.status(201).json({ data: tourPackage });
-}));
-app.patch('/api/packages/:id', requireAuth, requireAdmin, asyncRoute(async (request, response) => {
-    const input = packageSchema.partial().parse(request.body);
-    const { destinationIds, ...fields } = input;
-    const tourPackage = await prisma.tourPackage.update({
-        where: {
-            id: idParam.parse(request.params.id),
-        },
-        data: {
-            ...fields,
-            ...(destinationIds
-                ? {
-                    destinations: {
-                        deleteMany: {},
-                        create: destinationIds.map((destinationId, order) => ({
-                            order,
-                            destination: {
-                                connect: {
-                                    id: destinationId,
-                                },
-                            },
-                        })),
-                    },
-                }
-                : {}),
-        },
-        include: {
-            destinations: true,
-        },
-    });
-    response.json({ data: tourPackage });
-}));
-app.delete('/api/packages/:id', requireAuth, requireAdmin, asyncRoute(async (request, response) => {
-    await prisma.tourPackage.delete({
-        where: {
-            id: idParam.parse(request.params.id),
-        },
-    });
-    response.status(204).end();
-}));
+// Experiences and curated journeys
+app.use('/api', createExperienceJourneyRouter(prisma, requireAuth, requireAdmin));
 // Trips
 app.get('/api/trips', requireAuth, asyncRoute(async (request, response) => {
     const trips = await prisma.trip.findMany({

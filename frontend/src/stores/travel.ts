@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
-import { destinations } from '../data'
+import { destinations } from '../services/catalog'
 import { sameTripIdentity, tripDurationDays } from '../utils/tripPlanner'
 import {
   api,
@@ -307,7 +307,7 @@ export const useTravelStore = defineStore('travel', () => {
     kind: CatalogKind,
     itemId: string,
   ): void {
-    if (!user.value) return
+    if (!user.value || isAdmin.value) return
 
     const index = wishlist.value.findIndex(
       item => item.kind === kind && item.itemId === itemId,

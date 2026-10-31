@@ -31,7 +31,7 @@ const { go, page, store, mobileMenu, navItems, modal } = useAppPageContext();
     </nav>
     <div class="top-actions">
       <button
-      v-if="store.user"
+      v-if="store.user && !store.isAdmin"
         class="icon-button nav-wishlist"
         title="Saved places"
         aria-label="Saved places"

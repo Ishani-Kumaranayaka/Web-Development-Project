@@ -87,6 +87,7 @@ function addDetailToTrip() {
           </p>
         </div>
         <button
+          v-if="!store.isAdmin"
           class="detail-save"
           @click="toggleSave(detailKind as CatalogKind, detailId)"
         >
@@ -287,7 +288,7 @@ function addDetailToTrip() {
           <p class="eyebrow">MAKE IT YOURS</p>
           <h3>Ready when<br />you <em>are.</em></h3>
           <p>
-            Save this for later or make it the first stop in your trip plan.
+            {{ store.isAdmin ? "Explore the details of this place or journey." : "Save this for later or make it the first stop in your trip plan." }}
           </p>
           <button
             class="button button-dark wide-button"
@@ -306,6 +307,7 @@ function addDetailToTrip() {
             }}
             <ArrowRight :size="16" /></button
           ><button
+            v-if="!store.isAdmin"
             class="button button-outline wide-button"
             @click="toggleSave(detailKind as CatalogKind, detailId)"
           >

@@ -874,6 +874,18 @@ onUnmounted(() => {
         <ArrowUpRight :size="16" />
       </button>
 
+      <button type="button" @click="go('/activities')">
+        <MapPin :size="18" />
+        <span><b>Experiences</b><small>Create, view, edit and delete experiences</small></span>
+        <ArrowUpRight :size="16" />
+      </button>
+
+      <button type="button" @click="go('/packages')">
+        <CalendarDays :size="18" />
+        <span><b>Journeys</b><small>Manage packages and daily itineraries</small></span>
+        <ArrowUpRight :size="16" />
+      </button>
+
       <button
         type="button"
         @click="openBookingTable"

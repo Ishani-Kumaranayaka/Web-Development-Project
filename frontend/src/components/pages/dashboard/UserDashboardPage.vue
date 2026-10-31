@@ -84,7 +84,7 @@ const todayLabel = computed(() =>
         <span class="stat-caption">Bookings</span>
         <ArrowUpRight :size="16" />
       </button>
-      <button class="stat-block" @click="go('/wishlist')">
+      <button v-if="!store.isAdmin" class="stat-block" @click="go('/wishlist')">
         <span class="stat-symbol yellow"><Heart :size="19" /></span>
         <span class="stat-number">{{ store.wishlist.length.toString().padStart(2, "0") }}</span>
         <span class="stat-caption">Saved places</span>
@@ -121,7 +121,7 @@ const todayLabel = computed(() =>
           <img
             :src="
               destinations.find((item) => item.id === trip.destinationIds[0])
-                ?.image ?? destinations[0].image
+                ?.image ?? destinations[0]?.image
             "
             :alt="trip.name"
           />
@@ -143,7 +143,7 @@ const todayLabel = computed(() =>
       </section>
       <section class="dashboard-panel inspire-panel">
         <div class="inspire-visual">
-          <img :src="destinations[5].image" alt="Wild elephants in Yala" />
+          <img :src="destinations[5]?.image ?? destinations[0]?.image" alt="Wild elephants in Yala" />
           <div>
             <p class="eyebrow light">JUST FOR YOU</p>
             <h3>Wild things<br />are waiting.</h3>
@@ -155,7 +155,7 @@ const todayLabel = computed(() =>
             </button>
           </div>
         </div>
-        <p>Because you saved the outdoors, we think you might love this one.</p>
+        <p v-if="!store.isAdmin">Because you saved the outdoors, we think you might love this one.</p>
       </section>
     </div>
     <div class="dashboard-lower">
@@ -166,7 +166,7 @@ const todayLabel = computed(() =>
             <h3>Recent activity</h3>
           </div>
         </div>
-        <div class="activity-log-row">
+        <div v-if="!store.isAdmin" class="activity-log-row">
           <span class="log-icon"><Heart :size="15" /></span>
           <p>
             You saved

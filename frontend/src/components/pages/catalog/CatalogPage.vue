@@ -13,6 +13,7 @@ import {
 
 import { useAppPageContext } from '../../../context/appPageContext'
 import CatalogManager from '../../admin/CatalogManager.vue'
+import ExperienceJourneyManager from '../../admin/ExperienceJourneyManager.vue'
 import type { Destination } from '../../../types'
 import {
   deleteDestination,
@@ -185,6 +186,12 @@ async function confirmDelete(): Promise<void> {
       ref="catalogManager"
     />
 
+    <ExperienceJourneyManager
+      v-if="store.isAdmin && (page === 'activities' || page === 'packages')"
+      :key="page"
+      :kind="page === 'activities' ? 'activity' : 'package'"
+    />
+
     <p
       v-if="
         store.isAdmin &&
@@ -281,6 +288,7 @@ async function confirmDelete(): Promise<void> {
 
           <button
             type="button"
+            v-if="!store.isAdmin"
             class="save-button"
             :aria-label="`Save ${item.name}`"
             @click.stop="toggleSave('destination', item.id)"
@@ -372,6 +380,7 @@ async function confirmDelete(): Promise<void> {
 
           <button
             type="button"
+            v-if="!store.isAdmin"
             class="save-button"
             aria-label="Save hotel"
             @click.stop="toggleSave('hotel', item.id)"
@@ -446,6 +455,7 @@ async function confirmDelete(): Promise<void> {
 
           <button
             type="button"
+            v-if="!store.isAdmin"
             class="save-button"
             aria-label="Save activity"
             @click.stop="toggleSave('activity', item.id)"
@@ -507,6 +517,7 @@ async function confirmDelete(): Promise<void> {
 
           <button
             type="button"
+            v-if="!store.isAdmin"
             class="save-button"
             aria-label="Save package"
             @click.stop="toggleSave('package', item.id)"
@@ -547,6 +558,9 @@ async function confirmDelete(): Promise<void> {
         </div>
       </article>
     </div>
+
+    <p v-if="page === 'activities' && !activities.length" class="empty-state">No experiences available yet.</p>
+    <p v-if="page === 'packages' && !packages.length" class="empty-state">No journeys available yet.</p>
 
     <div
       v-if="page === 'destinations' && !destinationList.length"

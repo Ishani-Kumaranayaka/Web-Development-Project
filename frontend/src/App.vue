@@ -8,11 +8,13 @@ import {
   watch,
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { activities, packages, reviews } from './data'
+import { reviews } from './data'
 import './styles/catalog-notice.css'
 import {
   destinations,
   hotels,
+  activities,
+  packages,
   catalogStatus,
   loadCatalog,
 } from './services/catalog'
@@ -332,7 +334,7 @@ function toggleSave(
   kind: CatalogKind,
   id: string,
 ): void {
-  if (!requireAccount()) return
+  if (store.isAdmin || !requireAccount()) return
 
   const exists = store.wishlist.some(
     item => item.kind === kind && item.itemId === id,
@@ -650,7 +652,7 @@ provide(appPageContextKey, {
     />
 
     <WishlistPage
-      v-else-if="page === 'wishlist' && store.user"
+      v-else-if="page === 'wishlist' && store.user && !store.isAdmin"
       @toast="showToast"
     />
 
