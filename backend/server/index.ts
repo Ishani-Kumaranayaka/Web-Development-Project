@@ -9,6 +9,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { Prisma, PrismaClient } from '@prisma/client'
 import { z } from 'zod'
+import { createDemoPaymentHandler, isDemoPaymentEnabled } from './demoPayments.js'
 
 const app = express()
 const prisma = new PrismaClient()
@@ -982,6 +983,14 @@ app.delete('/api/wishlist/:id', requireAuth, asyncRoute(async (request, response
   response.status(204).end()
 }))
 
+// Payment configuration contains no merchant credentials.
+app.get('/api/payments/config', (_request, response) => {
+  response.json({ data: { demoPaymentsEnabled: isDemoPaymentEnabled() } })
+})
+
+app.post('/api/bookings/:id/demo-payment', requireAuth,
+  createDemoPaymentHandler(prisma, bookingInclude))
+
 // Bookings
 
 app.get('/api/bookings', requireAuth, asyncRoute(async (request, response) => {
@@ -1096,13 +1105,17 @@ app.patch('/api/bookings/:id/payment-status', requireAuth, requireAdmin, asyncRo
     ]),
   }).parse(request.body)
 
+  const id = idParam.parse(request.params.id)
+  const previous = await prisma.booking.findUniqueOrThrow({ where: { id } })
+  if (previous.paymentStatus === 'DEMO_PAID' && paymentStatus !== 'UNPAID') {
+    response.status(409).json({
+      message: 'A demo payment is not a real payment or refund. Reset it to Unpaid to run the demonstration again.',
+    })
+    return
+  }
   const booking = await prisma.booking.update({
-    where: {
-      id: idParam.parse(request.params.id),
-    },
-    data: {
-      paymentStatus,
-    },
+    where: { id, paymentStatus: previous.paymentStatus },
+    data: { paymentStatus },
     include: bookingInclude,
   })
 

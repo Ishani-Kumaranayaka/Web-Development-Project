@@ -49,6 +49,7 @@ const paymentOptions: PaymentStatus[] = [
   'Unpaid',
   'Paid',
   'Refunded',
+  'Demo paid',
 ]
 
 let readVersion = 0
@@ -582,7 +583,7 @@ onUnmounted(() => {
       <div>
         <span>Payments received</span>
         <b>{{ stats ? price(stats.revenue) : '—' }}</b>
-        <small>Bookings currently marked Paid</small>
+        <small>Marked Paid; demo payments excluded</small>
       </div>
     </div>
 
@@ -801,6 +802,7 @@ onUnmounted(() => {
                     v-for="status in paymentOptions"
                     :key="status"
                     :value="status"
+                    :disabled="status === 'Demo paid'"
                   >
                     {{ status }}
                   </option>

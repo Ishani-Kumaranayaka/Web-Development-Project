@@ -30,7 +30,7 @@ interface BookingDto {
   guests: number
   totalPrice: number
   status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
-  paymentStatus: 'UNPAID' | 'PAID' | 'REFUNDED'
+  paymentStatus: 'UNPAID' | 'PAID' | 'REFUNDED' | 'DEMO_PAID'
   specialRequests?: string | null
   createdAt: string
   hotel?: { name: string } | null
@@ -69,6 +69,7 @@ function normalizeBooking(item: BookingDto): DatabaseBooking {
     UNPAID: 'Unpaid',
     PAID: 'Paid',
     REFUNDED: 'Refunded',
+    DEMO_PAID: 'Demo paid',
   }
 
   return {
@@ -101,6 +102,16 @@ client.interceptors.request.use(config => {
 })
 
 export const api = {
+  async getPaymentOptions(): Promise<{ demoPaymentsEnabled: boolean }> {
+    const response = await client.get<{ data: { demoPaymentsEnabled: boolean } }>('/payments/config')
+    return response.data.data
+  },
+
+  async payDemoBooking(id: string): Promise<ApiResponse<DatabaseBooking>> {
+    const response = await client.post<ApiResponse<BookingDto>>('/bookings/' + id + '/demo-payment')
+    return { data: normalizeBooking(response.data.data), message: response.data.message }
+  },
+
     async getBookings(
     scope: 'mine' | 'all' = 'mine',
   ): Promise<ApiResponse<DatabaseBooking[]>> {
@@ -166,7 +177,7 @@ export const api = {
     return response.data
   },
   async updateBookingPaymentStatus(id: string, paymentStatus: PaymentStatus): Promise<void> {
-    await client.patch(`/bookings/${id}/payment-status`, { paymentStatus: paymentStatus.toUpperCase() })
+    await client.patch(`/bookings/${id}/payment-status`, { paymentStatus: paymentStatus.toUpperCase().replace(/ /g, '_') })
   },
   async updateBookingStatus(id: string, status: BookingStatus): Promise<void> {
     await client.patch(`/bookings/${id}/status`, { status: status.toUpperCase() })

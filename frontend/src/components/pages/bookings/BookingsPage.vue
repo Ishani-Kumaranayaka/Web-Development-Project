@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import {
   ArrowRight,
   CalendarDays,
   Users,
 } from 'lucide-vue-next'
 import { useAppPageContext } from '../../../context/appPageContext'
-import { api } from '../../../services/api'
+import { api, type DatabaseBooking } from '../../../services/api'
+import DemoPaymentDialog from './DemoPaymentDialog.vue'
 
 const {
   store,
@@ -29,6 +30,62 @@ const {
 
 const cancellingId = ref('')
 const cancellationError = ref('')
+const demoPaymentsEnabled = ref(false)
+const paymentOptionsError = ref('')
+const paymentTargetId = ref('')
+const paymentError = ref('')
+const payingId = ref('')
+const paymentTarget = computed(() => store.bookings.find(item => item.id === paymentTargetId.value) ?? null)
+
+async function loadPaymentOptions(): Promise<void> {
+  paymentOptionsError.value = ''
+  try {
+    const options = await api.getPaymentOptions()
+    demoPaymentsEnabled.value = options.demoPaymentsEnabled
+  } catch {
+    paymentOptionsError.value = 'Payment options could not be loaded. Try again.'
+  }
+}
+onMounted(() => { void loadPaymentOptions() })
+
+function canPay(booking: DatabaseBooking): boolean {
+  return Boolean(store.user && !store.isAdmin && demoPaymentsEnabled.value &&
+    booking.paymentStatus === 'Unpaid' &&
+    (booking.status === 'Pending' || booking.status === 'Confirmed') &&
+    Number.isFinite(booking.totalPrice) && booking.totalPrice > 0)
+}
+
+function openPayment(booking: DatabaseBooking): void {
+  if (store.bookingSaving || payingId.value || !canPay(booking)) return
+  paymentError.value = ''
+  paymentTargetId.value = booking.id
+}
+
+function closePayment(): void {
+  if (payingId.value) return
+  paymentTargetId.value = ''
+  paymentError.value = ''
+}
+
+async function confirmPayment(): Promise<void> {
+  const booking = paymentTarget.value
+  const accountId = store.user?.id
+  const token = localStorage.getItem('tm-token')
+  if (!booking || !accountId || payingId.value || store.bookingSaving || !canPay(booking)) return
+  payingId.value = booking.id
+  paymentError.value = ''
+  const sameSession = () => store.user?.id === accountId && localStorage.getItem('tm-token') === token
+  try {
+    await store.payDemoBooking(booking.id)
+    if (!sameSession()) return
+    paymentTargetId.value = ''
+    showToast('Demo payment completed. No money was charged.')
+  } catch (error: unknown) {
+    if (sameSession()) paymentError.value = api.getErrorMessage(error)
+  } finally {
+    if (sameSession()) payingId.value = ''
+  }
+}
 
 let cancellationVersion = 0
 
@@ -36,6 +93,9 @@ watch(() => store.user?.id, () => {
   cancellationVersion++
   cancellingId.value = ''
   cancellationError.value = ''
+  paymentTargetId.value = ''
+  paymentError.value = ''
+  payingId.value = ''
 }, { flush: 'sync' })
 
 async function cancelReservation(
@@ -122,6 +182,14 @@ function refreshHistory(): void {
         Every reservation, all in one place.
         Your next journey is getting closer.
       </p>
+    </div>
+
+    <p v-if="demoPaymentsEnabled" class="demo-payment-banner" role="status">
+      Payment demonstration: no real money is collected. Successful simulations are labelled Demo paid.
+    </p>
+    <div v-if="paymentOptionsError" class="booking-error" role="alert">
+      {{ paymentOptionsError }}
+      <button type="button" class="text-link" @click="loadPaymentOptions">Retry payment options</button>
     </div>
 
     <div class="booking-layout">
@@ -427,6 +495,19 @@ function refreshHistory(): void {
               <b>{{ price(booking.totalPrice) }}</b>
 
               <button
+                v-if="canPay(booking)"
+                type="button"
+                class="button button-dark demo-pay-button"
+                :disabled="store.bookingSaving || Boolean(cancellingId) || Boolean(payingId)"
+                @click="openPayment(booking)"
+              >
+                Pay now · Demo
+              </button>
+              <small v-if="booking.paymentStatus === 'Demo paid'" class="demo-payment-label">
+                Simulation only · no money charged
+              </small>
+
+              <button
                 v-if="
                   booking.status === 'Pending' ||
                   booking.status === 'Confirmed'
@@ -471,10 +552,21 @@ function refreshHistory(): void {
         </div>
       </section>
     </div>
+    <DemoPaymentDialog
+      :booking="paymentTarget"
+      :saving="Boolean(payingId)"
+      :error="paymentError"
+      @close="closePayment"
+      @confirm="confirmPayment"
+    />
   </main>
 </template>
 
 <style scoped>
+.demo-payment-banner { padding: 14px 18px; margin-bottom: 20px; border: 1px solid #cdd9b1; background: #f1f5e7; font-size: 14px; line-height: 1.6; }
+.demo-pay-button { min-height: 44px; font-size: 12px; }
+.demo-payment-label { max-width: 180px; text-align: right; font-size: 11px; line-height: 1.5; color: #586441; }
+
 .booking-layout {
   grid-template-columns: minmax(0, 390px) minmax(0, 1fr);
   gap: 32px;

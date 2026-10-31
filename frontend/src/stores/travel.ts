@@ -2,6 +2,7 @@ import axios from 'axios'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { destinations } from '../data'
+import { sameTripIdentity, tripDurationDays } from '../utils/tripPlanner'
 import {
   api,
   type CreateBookingInput,
@@ -276,6 +277,16 @@ export const useTravelStore = defineStore('travel', () => {
     )
   }
 
+  async function payDemoBooking(id: string): Promise<void> {
+    await runBookingChange(
+      () => api.payDemoBooking(id),
+      saved => {
+        const index = bookings.value.findIndex(item => item.id === id)
+        if (index !== -1) bookings.value.splice(index, 1, saved)
+      },
+    )
+  }
+
   // Clear the previous account's bookings and ignore its late responses.
   watch(() => user.value?.id, () => {
     bookingVersion++
@@ -321,10 +332,13 @@ export const useTravelStore = defineStore('travel', () => {
     endDate: string,
   ): void {
     if (!user.value) return
+    const cleanName = name.trim().replace(/\s+/g, ' ')
+    if (cleanName.length < 2 || !tripDurationDays(startDate, endDate)) return
+    if (trips.value.some(trip => sameTripIdentity(trip, cleanName, startDate, endDate))) return
 
     trips.value.push({
       id: crypto.randomUUID(),
-      name,
+      name: cleanName,
       startDate,
       endDate,
       destinationIds: [],
@@ -456,6 +470,7 @@ export const useTravelStore = defineStore('travel', () => {
     loadBookings,
     createBooking,
     cancelBooking,
+    payDemoBooking,
     toggleWishlist,
     createTrip,
     addDestinationToTrip,
